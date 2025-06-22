@@ -1,5 +1,7 @@
 # Sine_Wave_Gen
 
+![gui](images/gui.png)
+
 ## Overview
 
 `Sine_Wave_Gen` is a synthesizable VHDL module that generates an 8-bit sine wave using a precomputed lookup table. The frequency of the output signal is configurable through a 32-bit input vector. This module is designed to be compatible with AXI Stream (AXIS) interfaces.
