@@ -31,11 +31,11 @@ constant def_indx_cycle            : integer := IP_INPUT_FREQUENCY/DEFAULT_OUTPU
 signal indx_cycle                  : unsigned(30 downto 0) := to_unsigned(def_indx_cycle,31);
 signal sin_indx                    : unsigned(9 downto 0) := (others=>'0');
 signal cnt                         : unsigned(31 downto 0) := (others=>'0');
-alias valid_flag                   : std_logic is Config(31); 
-alias indx_cycle_value             : std_logic_vector(30 downto 0) is Config(30 downto 0);
+signal valid_flag_int              : std_logic := '0';  
+signal Config_int                  : std_logic_vector(31 downto 0) := (others=>'0');
 
 begin
-indx_cycle  <= unsigned(indx_cycle_value) when valid_flag = '1' else to_unsigned(def_indx_cycle,31);
+
 process(M_AXIS_ACLK)
 begin
     if rising_edge(M_AXIS_ACLK) then
@@ -43,18 +43,27 @@ begin
            cnt             <= (others=>'0');
            sin_indx        <= (others=>'0');
            M_AXIS_tVALID   <= '0';
+           indx_cycle      <= to_unsigned(def_indx_cycle,31);
        else
-           cnt             <= cnt+1;
-           M_AXIS_tVALID   <= '0';
-           if(cnt=indx_cycle)then
-               cnt        <= (others=>'0');
-               sin_indx   <= sin_indx+1;
-               if(sin_indx=SIN_TABLE_Length-1) then
-                   sin_indx       <= (others=>'0');
-               end if;
-               M_AXIS_tVALID  <= '1';
-               M_AXIS_tDATA   <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
-           end if;
+            Config_int         <= Config;
+            cnt                <= cnt+1;
+            indx_cycle  <= to_unsigned(def_indx_cycle,31);
+            if(Config(31) = '1') then
+                indx_cycle  <= unsigned(Config_int(30 downto 0)); 
+            end if;
+            M_AXIS_tVALID   <= '0';
+            if(cnt=indx_cycle)then
+                cnt        <= (others=>'0');
+                sin_indx   <= sin_indx+1;
+                if(sin_indx=SIN_TABLE_Length-1) then
+                    sin_indx       <= (others=>'0');
+                end if;
+                M_AXIS_tVALID  <= '1';
+                M_AXIS_tDATA   <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
+            end if;
+            if((Config_int(31) = '0' and Config(31) = '1') or (Config_int(31) = '1' and Config(31) = '0')) then 
+                cnt        <= (others=>'0');
+            end if;
        end if;
     end if;
 end process;

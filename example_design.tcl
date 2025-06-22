@@ -99,6 +99,15 @@ set_property -name "sim.central_dir" -value "$proj_dir/${_xil_proj_name_}.ip_use
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
 set_property -name "target_language" -value "VHDL" -objects $obj
+set_property -name "webtalk.activehdl_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.ies_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.modelsim_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.questa_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.riviera_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.vcs_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.xcelium_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.xsim_export_sim" -value "16" -objects $obj
+set_property -name "webtalk.xsim_launch_sim" -value "26" -objects $obj
 
 # Create 'sources_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sources_1] ""]} {
@@ -147,7 +156,16 @@ if {[string equal [get_filesets -quiet sim_1] ""]} {
 
 # Set 'sim_1' fileset object
 set obj [get_filesets sim_1]
-# Empty (no sources present)
+set files [list \
+ [file normalize "${origin_dir}/pl_src/design_1_wrapper_behav.wcfg"] \
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sim_1' fileset file properties for remote files
+# None
+
+# Set 'sim_1' fileset file properties for local files
+# None
 
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
@@ -183,6 +201,7 @@ proc cr_bd_design_1 { parentCell } {
   set bCheckIPs 1
   if { $bCheckIPs == 1 } {
      set list_check_ips "\ 
+  xilinx.com:ip:c_shift_ram:12.0\
   xilinx.com:ip:sim_clk_gen:1.0\
   xilinx.com:ip:xlconcat:2.1\
   xilinx.com:ip:xlconstant:1.1\
@@ -278,8 +297,18 @@ proc cr_bd_design_1 { parentCell } {
      return 1
    }
     set_property -dict [ list \
-   CONFIG.DEFAULT_OUTPUT_SIGNAL_FREQUENCY {10000} \
+   CONFIG.DEFAULT_OUTPUT_SIGNAL_FREQUENCY {20000} \
  ] $Sine_Wave_Gen_0
+
+  # Create instance: c_shift_ram_0, and set properties
+  set c_shift_ram_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:c_shift_ram:12.0 c_shift_ram_0 ]
+  set_property -dict [ list \
+   CONFIG.AsyncInitVal {00000000000000000000000000000000} \
+   CONFIG.DefaultData {00000000000000000000000000000000} \
+   CONFIG.Depth {1} \
+   CONFIG.SyncInitVal {00000000000000000000000000000000} \
+   CONFIG.Width {32} \
+ ] $c_shift_ram_0
 
   # Create instance: sim_clk_gen_0, and set properties
   set sim_clk_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:sim_clk_gen:1.0 sim_clk_gen_0 ]
@@ -287,7 +316,8 @@ proc cr_bd_design_1 { parentCell } {
   # Create instance: sim_clk_gen_2, and set properties
   set sim_clk_gen_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:sim_clk_gen:1.0 sim_clk_gen_2 ]
   set_property -dict [ list \
-   CONFIG.INITIAL_RESET_CLOCK_CYCLES {500} \
+   CONFIG.FREQ_HZ {1000} \
+   CONFIG.INITIAL_RESET_CLOCK_CYCLES {5000} \
  ] $sim_clk_gen_2
 
   # Create instance: xlconcat_0, and set properties
@@ -299,16 +329,21 @@ proc cr_bd_design_1 { parentCell } {
 
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {0} \
+   CONFIG.CONST_WIDTH {31} \
+ ] $xlconstant_0
 
   # Create interface connections
   connect_bd_intf_net -intf_net Sine_Wave_Gen_0_M_AXIS [get_bd_intf_ports M_AXIS_0] [get_bd_intf_pins Sine_Wave_Gen_0/M_AXIS]
 
   # Create port connections
-  connect_bd_net -net sim_clk_gen_0_clk [get_bd_pins Sine_Wave_Gen_0/M_AXIS_ACLK] [get_bd_pins sim_clk_gen_0/clk]
+  connect_bd_net -net c_shift_ram_0_Q [get_bd_pins Sine_Wave_Gen_0/Config] [get_bd_pins c_shift_ram_0/Q]
+  connect_bd_net -net sim_clk_gen_0_clk [get_bd_pins Sine_Wave_Gen_0/M_AXIS_ACLK] [get_bd_pins c_shift_ram_0/CLK] [get_bd_pins sim_clk_gen_0/clk]
   connect_bd_net -net sim_clk_gen_0_sync_rst [get_bd_pins Sine_Wave_Gen_0/M_AXIS_ARESETN] [get_bd_pins sim_clk_gen_0/sync_rst]
-  connect_bd_net -net sim_clk_gen_2_sync_rst [get_bd_pins sim_clk_gen_2/sync_rst] [get_bd_pins xlconcat_0/In0]
-  connect_bd_net -net xlconcat_0_dout [get_bd_pins Sine_Wave_Gen_0/Config] [get_bd_pins xlconcat_0/dout]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconcat_0/In1] [get_bd_pins xlconstant_0/dout]
+  connect_bd_net -net sim_clk_gen_2_clk [get_bd_pins sim_clk_gen_2/clk] [get_bd_pins xlconcat_0/In1]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins c_shift_ram_0/D] [get_bd_pins xlconcat_0/dout]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconcat_0/In0] [get_bd_pins xlconstant_0/dout]
 
   # Create address segments
 
@@ -317,8 +352,6 @@ proc cr_bd_design_1 { parentCell } {
   current_bd_instance $oldCurInst
 
   save_bd_design
-common::send_msg_id "BD_TCL-1000" "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
-
   close_bd_design $design_name 
 }
 # End of cr_bd_design_1()
