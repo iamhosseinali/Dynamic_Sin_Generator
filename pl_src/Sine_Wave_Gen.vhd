@@ -1,6 +1,8 @@
 -- Company: Taksun
 -- Engineer: Hosseinali 
--- Description: This design is written with the help of https://github.com/iamhosseinali/SINE_WAVE_VHDL_GENERATOR repo
+-- Description: Sine_Wave_Gen is a synthesizable VHDL module that generates an 8-bit sine wave using 
+-- a precomputed lookup table. The frequency of the output signal is configurable through a 32-bit input vector. 
+-- This module is designed to be compatible with AXI Stream (AXIS) interfaces.
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;

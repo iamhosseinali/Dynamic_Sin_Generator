@@ -1,3 +1,53 @@
+# Sine_Wave_Gen
+
+## Overview
+
+`Sine_Wave_Gen` is a synthesizable VHDL module that generates an 8-bit sine wave using a precomputed lookup table. The frequency of the output signal is configurable through a 32-bit input vector. This module is designed to be compatible with AXI Stream (AXIS) interfaces.
+
+>  **Inspired by**: [SINE_WAVE_VHDL_GENERATOR](https://github.com/iamhosseinali/SINE_WAVE_VHDL_GENERATOR)
+
+---
+
+## Features
+
+- Outputs 8-bit signed sine wave samples
+- Uses a 1024-entry sine lookup table
+- Configurable output frequency via 32-bit `Config` input
+- Supports runtime frequency reconfiguration
+
+---
+
+## Ports
+
+| Signal         | Direction | Width | Description |
+|----------------|-----------|-------|-------------|
+| `M_AXIS_ACLK`  | `in`      | 1     | Clock input |
+| `M_AXIS_ARESETN` | `in`    | 1     | Active-low reset |
+| `M_AXIS_tDATA` | `out`     | 8     | Sine wave output (signed) |
+| `M_AXIS_tVALID`| `out`     | 1     | Indicates valid output |
+| `Config`       | `in`      | 32    | Control input: <br>Bit 31: Valid flag <br>Bits 30:0: `IP_INPUT_FREQ / OUT_FREQ / 1024` |
+
+---
+
+## Generics
+
+| Name                            | Default       | Description |
+|---------------------------------|---------------|-------------|
+| `IP_INPUT_FREQUENCY`           | `100_000_000` | Input clock frequency (Hz) |
+| `DEFAULT_OUTPUT_SIGNAL_FREQUENCY` | `50`        | Default sine output frequency (Hz) |
+
+>  Maximum default output frequency is limited by:  
+> `DEFAULT_OUTPUT_SIGNAL_FREQUENCY <= IP_INPUT_FREQUENCY / 2048`
+>  But you can reach (IP_INPUT_FREQUENCY / 1024) by setting Config(30:0) to 0 at runtime. 
+
+## Behavior
+
+1. `Config(30:0)` is used to dynamically change the output frequency when `Config(31)` is high.
+
+2. A block RAM-styled lookup table stores precomputed sine values.
+
+
+
 # Clone and Recreation
 This project was built with vivado 2018.2, so make sure you are using this exact version.  
 PL projects often come with some custom IPs, these IPs can be HDL or HLS, sth like this: 
@@ -10,54 +60,16 @@ ip_repo
         ├───HLS_IP_1
         └───HLS_IP_2
 ```
-
-All of these IPs have their own git and are added to the project as git submodules, so to clone the project properly run: 
-
-```  git clone --recurse-submodules <repo_url> ```
+> This is the recommended directory structure of your custom IPs. 
 
 After cloning and before running the project_name.tcl to recreate the whole vivado project, firstly recreate the HLS IPs projects. 
 
-## Recreating the HLS project
-Step 1: Open Vivado HLS Command Prompt. 
-
-Step 2: Change the directory to ip_repo\HLS folder, e.q.
-
-``` cd c:\...\project_name\ip_repo\HLS ``` 
-
-
-Step 3: source the script.tcl: 
-
-``` vivado_hls -f HLS_IP_1\solution1\script.tcl ``` 
-
-
-Step 4: Open Vivado HLS and open your recreated project. 
-
-Step 5: Run C Synthesis and Export RTL. 
-
 ## Recreating the PL Project
-Make sure all the dependencies including HLS and HDL repos are correctly placed under the right directory, then in vivado command prompt or TCL Consol of the GUI run: 
+In vivado command prompt or TCL Consol of the GUI run: 
 
 ``` source c:\...\project_name\project_name.tcl ```
 
 Wait untill recreation is completed. 
-
-## Recreating the SDK project
-Step 1: Launch Xilinx SDK not from Vivao project but instead individually. 
-
-Step 2: Set the Workspace to ``` project_name\sdk ```
-
-Step 3: Import the BSP, Application, and hw_platform projects into the workspace.
-
-Step 4: Regenerate the BSP to resolve errors caused by missing .o and .a files — these are ignored in Git because they're auto-generated.
-
-Step 5: If applicable, replace modified BSP source files (found in the custom_bsp_sources folder) with the originals in the BSP project. Then, Build All.
-
-Step 6: Run:
-
-``` git add --renormalize . ```
-
-This ensures Git respects the .gitattributes file and normalizes line endings.
-
 
 Refer to this [repo](https://github.com/iamhosseinali/vivado-git) and look for the right branch based on your vivado version to use vivado and git together like the project above.
 
