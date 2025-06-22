@@ -184,6 +184,8 @@ proc cr_bd_design_1 { parentCell } {
   if { $bCheckIPs == 1 } {
      set list_check_ips "\ 
   xilinx.com:ip:sim_clk_gen:1.0\
+  xilinx.com:ip:xlconcat:2.1\
+  xilinx.com:ip:xlconstant:1.1\
   "
 
    set list_ips_missing ""
@@ -275,9 +277,28 @@ proc cr_bd_design_1 { parentCell } {
      catch {common::send_msg_id "BD_TCL-106" "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+    set_property -dict [ list \
+   CONFIG.DEFAULT_OUTPUT_SIGNAL_FREQUENCY {10000} \
+ ] $Sine_Wave_Gen_0
+
   # Create instance: sim_clk_gen_0, and set properties
   set sim_clk_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:sim_clk_gen:1.0 sim_clk_gen_0 ]
+
+  # Create instance: sim_clk_gen_2, and set properties
+  set sim_clk_gen_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:sim_clk_gen:1.0 sim_clk_gen_2 ]
+  set_property -dict [ list \
+   CONFIG.INITIAL_RESET_CLOCK_CYCLES {500} \
+ ] $sim_clk_gen_2
+
+  # Create instance: xlconcat_0, and set properties
+  set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
+  set_property -dict [ list \
+   CONFIG.IN0_WIDTH {31} \
+   CONFIG.IN1_WIDTH {1} \
+ ] $xlconcat_0
+
+  # Create instance: xlconstant_0, and set properties
+  set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
 
   # Create interface connections
   connect_bd_intf_net -intf_net Sine_Wave_Gen_0_M_AXIS [get_bd_intf_ports M_AXIS_0] [get_bd_intf_pins Sine_Wave_Gen_0/M_AXIS]
@@ -285,6 +306,9 @@ proc cr_bd_design_1 { parentCell } {
   # Create port connections
   connect_bd_net -net sim_clk_gen_0_clk [get_bd_pins Sine_Wave_Gen_0/M_AXIS_ACLK] [get_bd_pins sim_clk_gen_0/clk]
   connect_bd_net -net sim_clk_gen_0_sync_rst [get_bd_pins Sine_Wave_Gen_0/M_AXIS_ARESETN] [get_bd_pins sim_clk_gen_0/sync_rst]
+  connect_bd_net -net sim_clk_gen_2_sync_rst [get_bd_pins sim_clk_gen_2/sync_rst] [get_bd_pins xlconcat_0/In0]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins Sine_Wave_Gen_0/Config] [get_bd_pins xlconcat_0/dout]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconcat_0/In1] [get_bd_pins xlconstant_0/dout]
 
   # Create address segments
 
@@ -293,6 +317,8 @@ proc cr_bd_design_1 { parentCell } {
   current_bd_instance $oldCurInst
 
   save_bd_design
+common::send_msg_id "BD_TCL-1000" "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
+
   close_bd_design $design_name 
 }
 # End of cr_bd_design_1()
