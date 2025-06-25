@@ -43,18 +43,22 @@ begin
 process(M_AXIS_ACLK)
 begin
     if rising_edge(M_AXIS_ACLK) then
-       if (M_AXIS_ARESETN='0') then
-           cnt             <= (others=>'0');
-           sin_indx        <= (others=>'0');
-           M_AXIS_tVALID   <= '0';
-           indx_cycle      <= to_unsigned(def_indx_cycle,31);
-       else
-            Config_int         <= Config;
+        if (M_AXIS_ARESETN='0') then
+            cnt             <= (others=>'0');
+            sin_indx        <= (others=>'0');
+            M_AXIS_tVALID   <= '0';
+            indx_cycle      <= to_unsigned(def_indx_cycle,31);
+        else
             cnt                <= cnt+1;
+            --- Dynamic Fs implementation --- 
             if(Dynamic_Fs = true) then 
+                Config_int         <= Config;
                 indx_cycle  <= to_unsigned(def_indx_cycle,31);
                 if(Config(31) = '1') then
                     indx_cycle  <= unsigned(Config_int(30 downto 0)); 
+                end if;
+                if((Config_int(31) = '0' and Config(31) = '1') or (Config_int(31) = '1' and Config(31) = '0')) then 
+                    cnt        <= (others=>'0');
                 end if;
             end if; 
             M_AXIS_tVALID   <= '0';
@@ -66,9 +70,6 @@ begin
                 end if;
                 M_AXIS_tVALID  <= '1';
                 M_AXIS_tDATA   <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
-            end if;
-            if((Config_int(31) = '0' and Config(31) = '1') or (Config_int(31) = '1' and Config(31) = '0')) then 
-                cnt        <= (others=>'0');
             end if;
        end if;
     end if;
