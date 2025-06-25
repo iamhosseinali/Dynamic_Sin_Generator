@@ -10,6 +10,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity Sine_Wave_Gen is
 generic (
+    Dynamic_Fs          : boolean := false; 
     IP_INPUT_FREQUENCY  : integer := 100000000; --- in Hz
     DEFAULT_Fs          : integer := 100000000  --- in Hz
 );
@@ -50,10 +51,12 @@ begin
        else
             Config_int         <= Config;
             cnt                <= cnt+1;
-            indx_cycle  <= to_unsigned(def_indx_cycle,31);
-            if(Config(31) = '1') then
-                indx_cycle  <= unsigned(Config_int(30 downto 0)); 
-            end if;
+            if(Dynamic_Fs = true) then 
+                indx_cycle  <= to_unsigned(def_indx_cycle,31);
+                if(Config(31) = '1') then
+                    indx_cycle  <= unsigned(Config_int(30 downto 0)); 
+                end if;
+            end if; 
             M_AXIS_tVALID   <= '0';
             if(cnt=indx_cycle)then
                 cnt        <= (others=>'0');
