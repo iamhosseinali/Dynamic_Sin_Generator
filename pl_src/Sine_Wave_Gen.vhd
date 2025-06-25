@@ -13,14 +13,16 @@ generic (
     Dynamic_Fs          : boolean := false; 
     IP_INPUT_FREQUENCY  : integer := 100000000; --- in Hz
     DEFAULT_Fs          : integer := 100000000;  --- in Hz
+    Dynamic_Phase_Step  : boolean := false;
     DEFAULT_PHASE_STEP  : integer range 1 to 255 := 1
 );
 Port (
-    M_AXIS_ACLK    : in STD_LOGIC;
-    M_AXIS_ARESETN : in STD_LOGIC; 
-    M_AXIS_tDATA   : out std_logic_vector(7 downto 0);
-    M_AXIS_tVALID  : out std_logic;
-    Config         : in std_logic_vector(31 downto 0) -- (31) valid_flag, (30:0) IP_INPUT_FREQUENCY/Fs-1
+    M_AXIS_ACLK             : in STD_LOGIC;
+    M_AXIS_ARESETN          : in STD_LOGIC; 
+    M_AXIS_tDATA            : out std_logic_vector(7 downto 0);
+    M_AXIS_tVALID           : out std_logic;
+    PHASE_STEP_CONF         : in std_logic_vector(31 downto 0); 
+    Config                  : in std_logic_vector(31 downto 0) -- (31) valid_flag, (30:0) IP_INPUT_FREQUENCY/Fs-1
 );
 end Sine_Wave_Gen;
 
@@ -52,7 +54,9 @@ begin
             indx_cycle      <= to_unsigned(def_indx_cycle,31);
             Phase_Step      <= DEFAULT_PHASE_STEP;
         else
-            cnt                <= cnt+1;
+            cnt             <= cnt+1;
+            M_AXIS_tVALID   <= '0';
+            
             --- Dynamic Fs implementation --- 
             if(Dynamic_Fs = true) then 
                 Config_int         <= Config;
@@ -64,13 +68,18 @@ begin
                     cnt        <= (others=>'0');
                 end if;
             end if; 
-            M_AXIS_tVALID   <= '0';
+
+            --- Dynamic Phase Step implementation --- 
+            if(Dynamic_Phase_Step = true) then 
+                if(PHASE_STEP_CONF(31) = '1') then 
+                    Phase_Step      <= to_integer(unsigned(PHASE_STEP_CONF(7 downto 0))); 
+                end if; 
+            end if; 
+
+            --- LUT indexing --- 
             if(cnt=indx_cycle)then
                 cnt        <= (others=>'0');
                 sin_indx   <= sin_indx + to_unsigned(Phase_Step,8);
-                if(sin_indx=SIN_TABLE_Length-1) then
-                    sin_indx       <= (others=>'0');
-                end if;
                 M_AXIS_tVALID  <= '1';
                 M_AXIS_tDATA   <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
             end if;
