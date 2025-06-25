@@ -3,7 +3,8 @@
 -- Description: Sine_Wave_Gen is a synthesizable VHDL module that generates an 8-bit sine wave using 
 -- a precomputed lookup table. The frequency of the output signal is configurable through a 32-bit input vector. 
 -- This module is designed to be compatible with AXI Stream (AXIS) interfaces. The Phase width is 8 so there are 
--- 2^8 samples in one sine wave cycle. 
+-- 2^8 samples in one sine wave cycle. Use these formulas to caculate the phase_step, f_out = (phase_step × Fs) / 2^8 
+-- or phase_step = 2^8 x f_out/Fs
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -78,10 +79,10 @@ begin
 
             --- LUT indexing --- 
             if(cnt=indx_cycle)then
-                cnt        <= (others=>'0');
-                sin_indx   <= sin_indx + to_unsigned(Phase_Step,8);
-                M_AXIS_tVALID  <= '1';
-                M_AXIS_tDATA   <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
+                cnt             <= (others=>'0');
+                sin_indx        <= sin_indx + to_unsigned(Phase_Step,8);
+                M_AXIS_tVALID   <= '1';
+                M_AXIS_tDATA    <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
             end if;
        end if;
     end if;
