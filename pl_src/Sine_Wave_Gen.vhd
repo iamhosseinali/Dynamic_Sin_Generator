@@ -12,7 +12,8 @@ entity Sine_Wave_Gen is
 generic (
     Dynamic_Fs          : boolean := false; 
     IP_INPUT_FREQUENCY  : integer := 100000000; --- in Hz
-    DEFAULT_Fs          : integer := 100000000  --- in Hz
+    DEFAULT_Fs          : integer := 100000000;  --- in Hz
+    DEFAULT_PHASE_STEP  : integer range 1 to 255 := 1
 );
 Port (
     M_AXIS_ACLK    : in STD_LOGIC;
@@ -37,6 +38,7 @@ signal sin_indx                    : unsigned(7 downto 0) := (others=>'0');
 signal cnt                         : unsigned(31 downto 0) := (others=>'0');
 signal valid_flag_int              : std_logic := '0';  
 signal Config_int                  : std_logic_vector(31 downto 0) := (others=>'0');
+signal Phase_Step                  : integer := DEFAULT_PHASE_STEP; 
 
 begin
 
@@ -48,6 +50,7 @@ begin
             sin_indx        <= (others=>'0');
             M_AXIS_tVALID   <= '0';
             indx_cycle      <= to_unsigned(def_indx_cycle,31);
+            Phase_Step      <= DEFAULT_PHASE_STEP;
         else
             cnt                <= cnt+1;
             --- Dynamic Fs implementation --- 
@@ -64,7 +67,7 @@ begin
             M_AXIS_tVALID   <= '0';
             if(cnt=indx_cycle)then
                 cnt        <= (others=>'0');
-                sin_indx   <= sin_indx+1;
+                sin_indx   <= sin_indx + to_unsigned(Phase_Step,8);
                 if(sin_indx=SIN_TABLE_Length-1) then
                     sin_indx       <= (others=>'0');
                 end if;
