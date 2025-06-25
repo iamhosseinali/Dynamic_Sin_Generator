@@ -23,7 +23,7 @@ Port (
     M_AXIS_tDATA            : out std_logic_vector(7 downto 0);
     M_AXIS_tVALID           : out std_logic;
     PHASE_STEP_CONF         : in std_logic_vector(31 downto 0); 
-    Config                  : in std_logic_vector(31 downto 0) -- (31) valid_flag, (30:0) IP_INPUT_FREQUENCY/Fs-1
+    FS_CONF                 : in std_logic_vector(31 downto 0) -- (31) valid_flag, (30:0) IP_INPUT_FREQUENCY/Fs-1
 );
 end Sine_Wave_Gen;
 
@@ -60,12 +60,12 @@ begin
             
             --- Dynamic Fs implementation --- 
             if(Dynamic_Fs = true) then 
-                Config_int         <= Config;
+                Config_int         <= FS_CONF;
                 indx_cycle  <= to_unsigned(def_indx_cycle,31);
-                if(Config(31) = '1') then
+                if(FS_CONF(31) = '1') then
                     indx_cycle  <= unsigned(Config_int(30 downto 0)); 
                 end if;
-                if((Config_int(31) = '0' and Config(31) = '1') or (Config_int(31) = '1' and Config(31) = '0')) then 
+                if((Config_int(31) = '0' and FS_CONF(31) = '1') or (Config_int(31) = '1' and FS_CONF(31) = '0')) then 
                     cnt        <= (others=>'0');
                 end if;
             end if; 
