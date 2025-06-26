@@ -4,7 +4,7 @@
 
 ## Overview
 
-`Sine_Wave_Gen` is a synthesizable VHDL module that generates an 8-bit sine wave using a precomputed lookup table. The output frequency is configurable at runtime using a dynamic phase increment. The design is compatible with AXI Stream (AXIS) interfaces and suitable for integration with FFT, DAC, or streaming pipelines.
+`Sine_Wave_Gen` is a synthesizable VHDL module that generates a sine wave using a precomputed lookup table. The output frequency is configurable at runtime using a dynamic phase increment. The design is compatible with AXI Stream (AXIS) interfaces and suitable for integration with FFT, DAC, or streaming pipelines.
 
 > **Inspired by**: [SINE_WAVE_VHDL_GENERATOR](https://github.com/iamhosseinali/SINE_WAVE_VHDL_GENERATOR)
 
@@ -12,11 +12,13 @@
 
 ## Features
 
-- Outputs 8-bit signed sine wave samples
-- Uses a 256-entry LUT for sine samples (i.e., phase resolution = 8 bits)
-- Supports dynamic output frequency adjustment via:
+- Outputs **signed sine wave samples** (configurable bit-width)
+- Uses a **256-entry LUT** for sine samples (i.e., phase resolution = 8 bits)
+- Supports **dynamic output frequency adjustment** via:
   - **Phase increment control** (optional)
-- Fully AXI-Stream compatible (`tDATA`, `tVALID`)
+  - **Sampling rate control** (optional)
+- **Configurable output width**: The default 8-bit sine values can be resized to a wider `Resize_8Bit_Output_To` bit output
+- Fully **AXI-Stream compatible** (`tDATA`, `tVALID`)
 - Configurable via 32-bit control words
 
 ---
@@ -43,14 +45,14 @@ phase_step = (f_out × 256) / Fs
 
 ## Ports
 
-| Signal            | Direction | Width | Description |
-|-------------------|-----------|-------|-------------|
-| `M_AXIS_ACLK`     | `in`      | 1     | Clock input |
-| `M_AXIS_ARESETN`  | `in`      | 1     | Active-low reset |
-| `M_AXIS_tDATA`    | `out`     | 8     | Sine wave output (signed) |
-| `M_AXIS_tVALID`   | `out`     | 1     | Indicates valid output |
-| `PHASE_STEP_CONF` | `in`      | 32    | Dynamic phase increment config: <br> Bit 31 = valid, Bits [7:0] = phase step |
-| `FS_CONF`         | `in`      | 32    | Dynamic sample rate config: <br> Bit 31 = valid, Bits [30:0] = (Input Freq / Fs) - 1 |
+| Signal            | Direction | Width                     | Description |
+|-------------------|-----------|----------------------------|-------------|
+| `M_AXIS_ACLK`     | `in`      | 1                          | Clock input |
+| `M_AXIS_ARESETN`  | `in`      | 1                          | Active-low reset |
+| `M_AXIS_tDATA`    | `out`     | `Resize_8Bit_Output_To`    | Sine wave output (signed, resized from 8-bit) |
+| `M_AXIS_tVALID`   | `out`     | 1                          | Indicates valid output |
+| `PHASE_STEP_CONF` | `in`      | 32                         | Dynamic phase increment config: <br> Bit 31 = valid, Bits [7:0] = phase step |
+| `FS_CONF`         | `in`      | 32                         | Dynamic sample rate config: <br> Bit 31 = valid, Bits [30:0] = (Input Freq / Fs) - 1 |
 
 ---
 
@@ -63,6 +65,7 @@ phase_step = (f_out × 256) / Fs
 | `IP_INPUT_FREQUENCY` | `100_000_000` | Clock frequency of `M_AXIS_ACLK` in Hz |
 | `DEFAULT_Fs`         | `100_000_000` | Default output sampling rate (Hz) |
 | `DEFAULT_PHASE_STEP` | `1`           | Default DDS phase increment (1–255) |
+| `Resize_8Bit_Output_To` | `16`       | Output bit width. Resizes signed 8-bit sine samples to wider output (8–64 bits) |
 
 ---
 
@@ -73,12 +76,13 @@ phase_step = (f_out × 256) / Fs
 2. When `Dynamic_Phase_Step = true`, the frequency can be changed at runtime by updating `PHASE_STEP_CONF(7:0)`.
 3. LUT index is advanced by `phase_step`, producing the output sine waveform.
 4. AXIS signals (`tDATA`, `tVALID`) are asserted only when valid output is generated.
+5. Output sine values are signed 8-bit from the LUT, and **resized to `Resize_8Bit_Output_To` bits**, allowing direct compatibility with wider downstream interfaces such as FFTs, DACs, etc.
 
 ---
 
 ## Output Waveform Resolution
 
-- **Amplitude resolution**: 8 bits (signed)
+- **Amplitude resolution**: 8 bits (signed), resizable up to 64 bits
 - **Phase resolution**: 8 bits (256 samples per cycle)
 - **Output frequency resolution**:  
   Depends on `phase_step` and `Fs`. Smallest `f_out` step:
