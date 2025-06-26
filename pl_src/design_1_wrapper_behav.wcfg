@@ -11,13 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="237055000000fs"></ZoomStartTime>
-      <ZoomEndTime time="238410000001fs"></ZoomEndTime>
-      <Cursor1Time time="237325000000fs"></Cursor1Time>
+      <ZoomStartTime time="100114038461fs"></ZoomStartTime>
+      <ZoomEndTime time="101177192308fs"></ZoomEndTime>
+      <Cursor1Time time="100185000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="228"></NameColumnWidth>
-      <ValueColumnWidth column_width="147"></ValueColumnWidth>
+      <ValueColumnWidth column_width="143"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="9" />
    <wvobject fp_name="/design_1_wrapper/design_1_i/Sine_Wave_Gen_0/M_AXIS_ACLK" type="logic">
@@ -29,8 +29,8 @@
       <obj_property name="ObjectShortName">M_AXIS_ARESETN</obj_property>
    </wvobject>
    <wvobject fp_name="/design_1_wrapper/M_AXIS_0_tdata" type="array">
-      <obj_property name="ElementShortName">M_AXIS_0_tdata[15:0]</obj_property>
-      <obj_property name="ObjectShortName">M_AXIS_0_tdata[15:0]</obj_property>
+      <obj_property name="ElementShortName">M_AXIS_0_tdata[63:0]</obj_property>
+      <obj_property name="ObjectShortName">M_AXIS_0_tdata[63:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
       <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
       <obj_property name="CellHeight">100</obj_property>

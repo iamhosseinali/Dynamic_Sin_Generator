@@ -11,16 +11,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity Sine_Wave_Gen is
 generic (
-    Dynamic_Fs          : boolean := false; 
-    IP_INPUT_FREQUENCY  : integer := 100000000; --- in Hz
-    DEFAULT_Fs          : integer := 100000000;  --- in Hz
-    Dynamic_Phase_Step  : boolean := false;
-    DEFAULT_PHASE_STEP  : integer range 1 to 255 := 1
+    Dynamic_Fs              : boolean := false; 
+    IP_INPUT_FREQUENCY      : integer := 100000000; --- in Hz
+    DEFAULT_Fs              : integer := 100000000;  --- in Hz
+    Dynamic_Phase_Step      : boolean := false;
+    DEFAULT_PHASE_STEP      : integer range 1 to 255 := 1;
+    Resize_8Bit_Output_To   : integer range 8 to 64 := 16
 );
 Port (
     M_AXIS_ACLK             : in STD_LOGIC;
     M_AXIS_ARESETN          : in STD_LOGIC; 
-    M_AXIS_tDATA            : out std_logic_vector(7 downto 0);
+    M_AXIS_tDATA            : out std_logic_vector(Resize_8Bit_Output_To-1 downto 0);
     M_AXIS_tVALID           : out std_logic;
     PHASE_STEP_CONF         : in std_logic_vector(31 downto 0); 
     FS_CONF                 : in std_logic_vector(31 downto 0) -- (31) valid_flag, (30:0) IP_INPUT_FREQUENCY/Fs-1
@@ -82,7 +83,7 @@ begin
                 cnt             <= (others=>'0');
                 sin_indx        <= sin_indx + to_unsigned(Phase_Step,8);
                 M_AXIS_tVALID   <= '1';
-                M_AXIS_tDATA    <= std_logic_vector(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH));
+                M_AXIS_tDATA    <= std_logic_vector(resize(to_signed(SIN_TABLE(to_integer(sin_indx)),SIN_DATA_WIDTH),Resize_8Bit_Output_To));
             end if;
        end if;
     end if;
